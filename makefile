@@ -2,7 +2,8 @@
 
 build:
 	go tool vet .
-	cd dir && GOOS=darwin GOARCH=386 go build -o ../bin/dir .
+	GOOS=darwin GOARCH=amd64 go build -o bin/dir github.com/adamdecaf/dist/dir
+	chmod +x ./bin/*
 
 test:
-	cd dir && go test -v .
+	go test -v ./dir

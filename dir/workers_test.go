@@ -1,4 +1,4 @@
-package dir
+package main
 
 import (
 	"github.com/adamdecaf/dist/dist"
