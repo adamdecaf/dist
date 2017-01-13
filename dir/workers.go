@@ -12,7 +12,7 @@ import (
 )
 
 var (
-	directory []dist.Address
+	directory []*dist.Address
 	dirLock sync.RWMutex
 )
 
@@ -23,7 +23,7 @@ var (
 func register(address dist.Address) {
 	dirLock.Lock()
 	defer dirLock.Unlock()
-	directory = append(directory, address)
+	directory = append(directory, &address)
 	log.Printf("registered %s", address.String())
 }
 
@@ -51,13 +51,53 @@ func findWorkers(count int) []dist.Address {
 	defer dirLock.RUnlock()
 
 	if count >= len(directory) {
-		return directory
+		out := make([]dist.Address, len(directory))
+		for _,v := range directory {
+			out = append(out, *v)
+		}
+		return out
 	}
 
 	start := rand.Int() % len(directory)
-	return directory[start:start+count]
+
+	// return a new copy of the workers
+	out := make([]dist.Address, len(directory))
+	for _,v := range directory[start:start+count] {
+		out = append(out, *v)
+	}
+	return out
 }
 
+// countWorkers returns the current count of workers
+func countWorkers() int {
+	dirLock.RLock()
+	defer dirLock.RUnlock()
+	return len(directory)
+}
+
+// removeWorkers is to remove workers from the active pool
+func removeWorkers(addrs []dist.Address) error {
+	dirLock.Lock()
+	defer dirLock.Unlock()
+
+	// cs 101 here we come
+	res := make([]*dist.Address, 0)
+	for i := range directory {
+		rm := false
+		for k := range addrs {
+			if directory[i].Equal(addrs[k]) {
+				rm = true
+			}
+		}
+		if !rm {
+			res[i] = directory[i]
+		}
+	}
+	directory = res
+	return nil
+}
+
+// Json for returning workers
 type Workers struct {
 	Workers []dist.Address `json:"workers"`
 }

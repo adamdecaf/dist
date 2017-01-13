@@ -9,6 +9,8 @@ import (
 func main() {
 	log.Println("starting dir")
 
+	startReaper()
+
 	// start our http server
 	http.HandleFunc("/ping", PingRoute)
 	http.HandleFunc("/workers", WorkersRoute)
