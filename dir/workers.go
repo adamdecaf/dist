@@ -1,12 +1,13 @@
 package main
 
 import (
-	"net/http"
 	"encoding/json"
-	"strconv"
 	"github.com/adamdecaf/dist/dist"
 	"log"
 	"math/rand"
+	"net"
+	"net/http"
+	"strconv"
 	"sync"
 )
 
@@ -15,11 +16,31 @@ var (
 	dirLock sync.RWMutex
 )
 
-func Register(address dist.Address) {
+// todo:
+// filter out bad ips
+// - lookback, invalid, etc
+
+func register(address dist.Address) {
 	dirLock.Lock()
 	defer dirLock.Unlock()
 	directory = append(directory, address)
 	log.Printf("registered %s", address.String())
+}
+
+// RegisterRoute accepts a worker and adds it to dir
+func RegisterRoute(w http.ResponseWriter, r *http.Request) {
+	addr := r.URL.Query().Get("address")
+	port, err := strconv.Atoi(r.URL.Query().Get("port"))
+	if (addr == "" || port <= 0) || err != nil {
+		http.Error(w, "'address' and/or 'port' query params are bad, please fix", http.StatusBadRequest)
+		return
+	}
+	ip := net.ParseIP(addr)
+	register(dist.Address{
+		IP: ip,
+		Port: port,
+	})
+	w.WriteHeader(204) // 'No Content'
 }
 
 // findWorkers attempts to find as many workers as possible, but cannot ensure

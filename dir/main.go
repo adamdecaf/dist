@@ -12,6 +12,7 @@ func main() {
 	// start our http server
 	http.HandleFunc("/ping", PingRoute)
 	http.HandleFunc("/workers", WorkersRoute)
+	http.HandleFunc("/register", RegisterRoute)
 
 	listen := fmt.Sprintf("127.0.0.1:%d", 8080)
 	err := http.ListenAndServe(listen, nil)

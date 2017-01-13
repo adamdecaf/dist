@@ -6,8 +6,8 @@ import (
 )
 
 type Address struct {
-	IP net.IP
-	Port int
+	IP net.IP `json:"ip"`
+	Port int `json:"port"`
 }
 func (a Address) String() string {
 	return fmt.Sprintf("%s:%d", a.IP.String(), a.Port)
