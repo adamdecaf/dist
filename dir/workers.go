@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"github.com/adamdecaf/dist/dist"
 	"log"
-	"math/rand"
 	"net"
 	"net/http"
 	"strconv"
@@ -19,12 +18,16 @@ var (
 // todo:
 // filter out bad ips
 // - lookback, invalid, etc
+// - don't add duplicates, or bad addresses
 
 func register(address dist.Address) {
 	dirLock.Lock()
 	defer dirLock.Unlock()
-	directory = append(directory, &address)
-	log.Printf("registered %s", address.String())
+
+	if address.Valid() {
+		directory = append(directory, &address)
+		log.Printf("registered %s", address.String())
+	}
 }
 
 // RegisterRoute accepts a worker and adds it to dir
@@ -50,21 +53,17 @@ func findWorkers(count int) []dist.Address {
 	dirLock.RLock()
 	defer dirLock.RUnlock()
 
-	if count >= len(directory) {
-		out := make([]dist.Address, len(directory))
-		for _,v := range directory {
-			out = append(out, *v)
-		}
-		return out
+	// reset count if they've asked for too much
+	max := len(directory)
+	if count > max {
+		count = max
 	}
 
-	start := rand.Int() % len(directory)
-
-	// return a new copy of the workers
-	out := make([]dist.Address, len(directory))
-	for _,v := range directory[start:start+count] {
+	out := make([]dist.Address, 0)
+	for _,v := range directory {
 		out = append(out, *v)
 	}
+
 	return out
 }
 
@@ -90,7 +89,9 @@ func removeWorkers(addrs []dist.Address) error {
 			}
 		}
 		if !rm {
-			res[i] = directory[i]
+			if directory[i].Valid() {
+				res = append(res, directory[i])
+			}
 		}
 	}
 	directory = res

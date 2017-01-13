@@ -12,7 +12,6 @@ func main() {
 	startReaper()
 
 	// start our http server
-	http.HandleFunc("/ping", PingRoute)
 	http.HandleFunc("/workers", WorkersRoute)
 	http.HandleFunc("/register", RegisterRoute)
 

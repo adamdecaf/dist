@@ -53,6 +53,7 @@ func reaper() {
 					mux.Lock()
 					flushable = append(flushable, w)
 					mux.Unlock()
+					log.Printf("%s looks dead", w.String())
 				}
 				wg.Done()
 			}()
